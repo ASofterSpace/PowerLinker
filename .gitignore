@@ -35,3 +35,7 @@ config
 
 # results
 *.csv
+*.ods
+*.xls
+*.xlsx
+*.json

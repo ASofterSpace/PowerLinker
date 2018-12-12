@@ -9,7 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.asofterspace.toolbox.coders.UrlEncoder;
+import com.asofterspace.toolbox.coders.Utf8Decoder;
 import com.asofterspace.toolbox.io.CsvFile;
+import com.asofterspace.toolbox.io.File;
 import com.asofterspace.toolbox.io.JSON;
 import com.asofterspace.toolbox.web.WebAccessor;
 import com.asofterspace.toolbox.Utils;
@@ -18,8 +21,8 @@ import com.asofterspace.toolbox.Utils;
 public class Main {
 	
 	public final static String PROGRAM_TITLE = "PowerLinker";
-	public final static String VERSION_NUMBER = "0.0.0.1(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
-	public final static String VERSION_DATE = "11. December 2018";
+	public final static String VERSION_NUMBER = "0.0.0.2(" + Utils.TOOLBOX_VERSION_NUMBER + ")";
+	public final static String VERSION_DATE = "11. December 2018 .. 12. December 2018";
 	
 	public final static String COOKIE = "";
 	public final static String JSESSIONID = "";
@@ -66,9 +69,14 @@ public class Main {
 		extraHeaders.put("csrf-token", JSESSIONID);
 		
 		String humans = WebAccessor.get("https://www.linkedin.com/voyager/api/relationships/connections", parameters, extraHeaders);
+
+		// optionally: save the result, and then load it again later
+		// File downloaded = new File("previously_downloaded.json");
+		// downloaded.saveContent(humans);
+		// String humans = (new File("previously_downloaded.json")).getContent();
 		
 		JSON humanJs = new JSON(humans);
-		
+
 		// sooo humans now contains JSON like:
 		// {"elements":[
 		// {"createdAt":1644433221000,"entityUrn":"urn:li:fs_relConnection:weoijwfiwei","miniProfile":{"firstName":"Someone","lastName":"Someonesson","occupation":"--","objectUrn":"urn:li:member:549595010","entityUrn":"urn:li:fs_miniProfile:werwewrwer","publicIdentifier":"someone-someonesson","picture":...,"trackingId":"ljlmljnjnj=="}},
@@ -90,7 +98,7 @@ public class Main {
 			
 			String publicId = miniHuman.getString("publicIdentifier");
 			
-			String individualProfile = WebAccessor.get("https://www.linkedin.com/in/" + publicId + "/", null, extraHeaders);
+			String individualProfile = WebAccessor.get("https://www.linkedin.com/in/" + UrlEncoder.encode(publicId) + "/", null, extraHeaders);
 			
 			// the individual profile now contains info such as:
 			// ... &quot;companyName&quot;:&quot;Azu Schlazzu&quot;,&quot;timePeriod&quot;:{&quot;startDate&quot;:{&quot;month&quot;:5,&quot;year&quot;:2015,&quot;$type&quot;:&quot;com.linkedin.common.Date&quot;},&quot;$type&quot;:&quot;com.linkedin.voyager.common.DateRange&quot;},&quot;company&quot;:{&quot;employeeCountRange&quot;:{&quot;start&quot;:11,&quot;end&quot;:50,&quot;$type&quot;:&quot;com.linkedin.voyager.identity.profile.EmployeeCountRange&quot;},&quot;industries&quot;:[&quot;Computer Software&quot;] ...
@@ -149,37 +157,18 @@ public class Main {
 			contentLine.add(company);
 			contentLine.add(industry);
 			result.appendContent(contentLine);
+			
+			// just in case ;)
+			result.save();
 		}
 
 		result.save();
 	}
 	
-	private String adjustStr(String str) {
+	private static	String adjustStr(String str) {
 	
-		str = str.replace("â€™", "'");
-		str = str.replace("â‚¬", "€");
-		str = str.replace("Ã¤", "ä");
-		str = str.replace("Ã„", "Ä");
-		str = str.replace("Ã¶", "ö");
-		str = str.replace("Ã–", "Ö");
-		str = str.replace("Ã¼", "ü");
-		str = str.replace("Ãœ", "Ü");
-		str = str.replace("Ã¡", "á");
-		str = str.replace("Ã€", "À");
-		str = str.replace("Ã©", "é");
-		str = str.replace("Ã³", "ó");
-		str = str.replace("Ã“", "Ó");
-		str = str.replace("Ãº", "ú");
-		str = str.replace("Ã­", "í");
-		str = str.replace("Ã¦", "æ");
-		str = str.replace("Ã†", "Æ");
-		str = str.replace("Ã°", "ð");
-		str = str.replace("Ã", "Ð");
-		str = str.replace("Ã¾", "þ");
-		str = str.replace("Ãž", "Þ");
-		str = str.replace("ÃŸ", "ß");
-		str = str.replace("Â¯", "¯");
-		str = str.replace("â€“", "-");
+		str = Utf8Decoder.decode(str);
+	
 		str = str.replace("&amp;", "&");
 		str = str.replace("\n", "");
 		str = str.replace("\r", "");
